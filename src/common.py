@@ -1,3 +1,5 @@
+# common.py
+# This file contains common utility functions and classes for the project.
 from __future__ import annotations
 import os
 import random

@@ -1,3 +1,5 @@
+# train.py
+# This script trains a PPO model on the CartPole-v1 environment and logs the training reward.
 from __future__ import annotations
 
 import argparse

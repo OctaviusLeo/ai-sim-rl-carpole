@@ -1,3 +1,5 @@
+# record_video.py
+# This script records a video of the trained model in action.
 from __future__ import annotations
 
 import argparse
