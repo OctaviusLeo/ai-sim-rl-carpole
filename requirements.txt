@@ -1,3 +1,4 @@
+# The following are the dependencies for a Python project that involves reinforcement learning using the gymnasium and stable-baselines3 libraries, along with PyTorch, NumPy, and Matplotlib:
 gymnasium[classic-control]>=0.29.1
 stable-baselines3>=2.3.0
 torch>=2.0.0

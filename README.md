@@ -1,4 +1,5 @@
-# AI Sim RL (CartPole) — Train/Eval + Video
+# AI Sim RL (CartPole) - Train/Eval + Video
+Besides simulations being cool, implementing AI is used to test.
 
 A minimal, **working** reinforcement learning demo you can extend.
 - Trains a PPO agent on `CartPole-v1` (Gymnasium).
@@ -29,7 +30,7 @@ python src/record_video.py --model-path outputs/cartpole_ppo.zip
 - `outputs/` — saved models + plots (created at runtime)
 - `videos/` — recorded demos (created at runtime)
 
-## What to improve next (good resume upgrades)
-- Add a second environment (e.g., `Acrobot-v1`), compare training curves
+## Future plans 
+- Add a second environment (`Acrobot-v1`), compare training curves
 - Add hyperparameter sweep + a short results table
 - Add reproducibility (fixed seeds, deterministic eval)
