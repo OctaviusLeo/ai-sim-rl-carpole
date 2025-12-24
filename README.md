@@ -6,6 +6,8 @@ A minimal, **working** reinforcement learning demo you can extend.
 - Evaluates and prints metrics.
 - Optionally records a short rollout video.
 
+Demo: 
+
 ## Quickstart
 ```bash
 python -m venv .venv
