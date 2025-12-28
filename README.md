@@ -10,7 +10,7 @@ A minimal, **working** reinforcement learning demo you can extend.
 
 Demo:
 
-![CartPole PPO demo (mp4->gif)](videos/cartpole_demo-episode-0.gif)
+![CartPole PPO demo (mp4->gif)](assets/cartpole_demo-episode-0.gif)
 
 ## Quickstart
 ```bash
