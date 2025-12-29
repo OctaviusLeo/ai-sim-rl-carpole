@@ -210,9 +210,7 @@ ai-sim-rl-cartpole/
    rl-reproduce outputs/runs/<run-dir>
    ```
 
-### Tips for Interviewers
-
-This project demonstrates:
+### Summary
 
 - **Professional packaging**: Installable package with CLI entrypoints
 - **Developer ergonomics**: Automation scripts for common workflows
