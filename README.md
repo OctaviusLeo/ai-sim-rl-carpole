@@ -16,9 +16,9 @@ A minimal, **working** reinforcement learning demo, can extend.
 - Reproduce exact runs from saved configurations.
 - Optionally records a short rollout video.
 
-Demo:
+## Demo
 
-![CartPole PPO demo (mp4->gif)](assets/cartpole_demo-episode-0.gif)
+![CartPole PPO demo](assets/cartpole_demo-episode-0.gif)
 
 ## Quickstart
 ```bash
