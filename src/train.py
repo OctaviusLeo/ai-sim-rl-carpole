@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 
 import gymnasium as gym
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import BaseCallback
@@ -16,7 +18,7 @@ try:
         TrainConfig,
         create_run_dir,
         ensure_dirs,
-        load_config_from_file,
+        load_config,
         merge_config_with_args,
         save_config,
         save_metrics,
@@ -27,7 +29,7 @@ except ImportError:
         TrainConfig,
         create_run_dir,
         ensure_dirs,
-        load_config_from_file,
+        load_config,
         merge_config_with_args,
         save_config,
         save_metrics,
@@ -57,6 +59,90 @@ class RewardLogger(BaseCallback):
         return True
 
 
+def train_ppo(
+    env_name: str,
+    total_timesteps: int,
+    seed: int,
+    output_dir: str,
+    n_steps: int = 2048,
+    batch_size: int = 64,
+    learning_rate: float = 3e-4,
+    gamma: float = 0.99,
+    gae_lambda: float = 0.95,
+    verbose: int = 1,
+):
+    """
+    Train a PPO agent on the specified environment.
+    
+    Args:
+        env_name: Name of the Gym environment
+        total_timesteps: Total timesteps to train for
+        seed: Random seed
+        output_dir: Directory to save outputs
+        n_steps: Number of steps per update
+        batch_size: Minibatch size
+        learning_rate: Learning rate
+        gamma: Discount factor
+        gae_lambda: GAE lambda
+        verbose: Verbosity level (0=none, 1=info)
+    
+    Returns:
+        Tuple of (trained model, metrics dict)
+    """
+    set_global_seed(seed)
+    
+    env = gym.make(env_name)
+    env.reset(seed=seed)
+    
+    # Create output directory
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    (output_path / "tensorboard").mkdir(exist_ok=True)
+    
+    model = PPO(
+        policy="MlpPolicy",
+        env=env,
+        verbose=verbose,
+        seed=seed,
+        n_steps=n_steps,
+        batch_size=batch_size,
+        gae_lambda=gae_lambda,
+        gamma=gamma,
+        learning_rate=learning_rate,
+        tensorboard_log=str(output_path / "tensorboard"),
+    )
+    
+    cb = RewardLogger()
+    model.learn(total_timesteps=total_timesteps, callback=cb)
+    
+    # Save model
+    model_path = output_path / "model"
+    model.save(str(model_path))
+    
+    # Compute metrics
+    metrics = {}
+    if len(cb.episode_rewards) > 0:
+        # Save training plot
+        plt.figure()
+        plt.plot(cb.episode_rewards)
+        plt.title("Training Episode Return")
+        plt.xlabel("Episode")
+        plt.ylabel("Return")
+        plot_path = output_path / "training_returns.png"
+        plt.savefig(plot_path, dpi=160, bbox_inches="tight")
+        plt.close()
+        
+        metrics = {
+            "total_episodes": len(cb.episode_rewards),
+            "final_mean_return": float(sum(cb.episode_rewards[-100:]) / min(100, len(cb.episode_rewards))),
+            "max_return": float(max(cb.episode_rewards)),
+            "min_return": float(min(cb.episode_rewards)),
+        }
+        save_metrics(metrics, output_path, "training_metrics.json")
+    
+    return model, metrics
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, help="Path to config file (JSON or YAML)")
@@ -71,7 +157,7 @@ def main() -> None:
     ensure_dirs()
     
     if args.config:
-        config = load_config_from_file(args.config, TrainConfig)
+        config = load_config(args.config, TrainConfig)
         override_dict = {
             "env": args.env if args.env != "CartPole-v1" else None,
             "timesteps": args.timesteps if args.timesteps != 200_000 else None,
@@ -96,58 +182,26 @@ def main() -> None:
             learning_rate=args.learning_rate,
         )
     
-    set_global_seed(config.seed)
-
     run_dir = create_run_dir(config)
     save_config(config, run_dir)
     print(f"Run directory: {run_dir}")
-
-    env = gym.make(config.env)
-    env.reset(seed=config.seed)
-
-    model = PPO(
-        policy="MlpPolicy",
-        env=env,
-        verbose=1,
+    
+    # Train the model
+    model, metrics = train_ppo(
+        env_name=config.env,
+        total_timesteps=config.timesteps,
         seed=config.seed,
+        output_dir=str(run_dir),
         n_steps=config.n_steps,
         batch_size=config.batch_size,
-        gae_lambda=config.gae_lambda,
-        gamma=config.gamma,
-        n_epochs=config.n_epochs,
-        ent_coef=config.ent_coef,
         learning_rate=config.learning_rate,
-        clip_range=config.clip_range,
-        tensorboard_log=str(run_dir / "tensorboard"),
+        gamma=config.gamma,
+        gae_lambda=config.gae_lambda,
+        verbose=1,
     )
-
-    cb = RewardLogger()
-    model.learn(total_timesteps=config.timesteps, callback=cb)
-
-    model_path = run_dir / "model"
-    model.save(str(model_path))
-
-    if len(cb.episode_rewards) > 0:
-        plt.figure()
-        plt.plot(cb.episode_rewards)
-        plt.title("Training Episode Return")
-        plt.xlabel("Episode")
-        plt.ylabel("Return")
-        plot_path = run_dir / "training_returns.png"
-        plt.savefig(plot_path, dpi=160, bbox_inches="tight")
-        plt.close()
-        print(f"Saved plot: {plot_path}")
-
-        metrics = {
-            "total_episodes": len(cb.episode_rewards),
-            "final_mean_return": float(sum(cb.episode_rewards[-100:]) / min(100, len(cb.episode_rewards))),
-            "max_return": float(max(cb.episode_rewards)),
-            "min_return": float(min(cb.episode_rewards)),
-        }
-        save_metrics(metrics, run_dir, "training_metrics.json")
-        print(f"Training metrics: {metrics}")
-
-    print(f"Saved model: {model_path}.zip")
+    
+    print(f"Training metrics: {metrics}")
+    print(f"Saved model: {run_dir / 'model.zip'}")
     print(f"All artifacts saved to: {run_dir}")
 
 

@@ -5,7 +5,20 @@ with open("README.md", "r", encoding="utf-8") as f:
     long_description = f.read()
 
 with open("requirements.txt", "r", encoding="utf-8") as f:
-    requirements = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+    all_lines = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+    
+# Split requirements into core and dev dependencies
+core_requirements = []
+dev_requirements = []
+is_dev_section = False
+
+for line in all_lines:
+    if "Development dependencies" in line:
+        is_dev_section = True
+    elif is_dev_section:
+        dev_requirements.append(line)
+    else:
+        core_requirements.append(line)
 
 setup(
     name="ai-sim-rl-cartpole",
@@ -28,7 +41,10 @@ setup(
         "Programming Language :: Python :: 3.11",
     ],
     python_requires=">=3.8",
-    install_requires=requirements,
+    install_requires=core_requirements,
+    extras_require={
+        "dev": dev_requirements,
+    },
     entry_points={
         "console_scripts": [
             "rl-train=src.train:main",

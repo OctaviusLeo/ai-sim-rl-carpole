@@ -12,6 +12,7 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 import yaml
+from scipy import stats
 
 
 @dataclass(frozen=True)
@@ -67,31 +68,49 @@ def create_run_dir(config: TrainConfig) -> Path:
     return run_dir
 
 
-def save_config(config: TrainConfig | EvalConfig, path: Path) -> None:
-    with open(path / "config.json", "w") as f:
-        json.dump(asdict(config), f, indent=2)
+def save_config(config: TrainConfig | EvalConfig | Dict[str, Any], path: Path | str) -> None:
+    """
+    Save configuration to a JSON file.
+    
+    Args:
+        config: Configuration object or dictionary to save
+        path: Path to save the config file (can be a directory or file path)
+    """
+    path = Path(path)
+    if path.is_dir():
+        config_path = path / "config.json"
+    else:
+        config_path = path
+    
+    # Convert dataclass to dict if needed
+    if hasattr(config, "__dataclass_fields__"):
+        config_data = asdict(config)
+    else:
+        config_data = config
+    
+    with open(config_path, "w") as f:
+        json.dump(config_data, f, indent=2)
 
 
-def load_config(path: Path, config_type: type) -> TrainConfig | EvalConfig:
-    with open(path / "config.json", "r") as f:
-        data = json.load(f)
-    return config_type(**data)
-
-
-def load_config_from_file(config_path: str | Path, config_type: type) -> TrainConfig | EvalConfig:
+def load_config(path: Path | str, config_type: Optional[type] = None) -> TrainConfig | EvalConfig | Dict[str, Any]:
     """
     Load configuration from a JSON or YAML file.
     
     Args:
-        config_path: Path to the configuration file
-        config_type: Type of config (TrainConfig or EvalConfig)
+        path: Path to the configuration file or directory containing config.json
+        config_type: Optional type of config (TrainConfig or EvalConfig)
     
     Returns:
-        Configuration object of the specified type
+        Configuration object of the specified type or dictionary
     """
-    path = Path(config_path)
+    path = Path(path)
+    
+    # If path is a directory, look for config.json
+    if path.is_dir():
+        path = path / "config.json"
+    
     if not path.exists():
-        raise FileNotFoundError(f"Config file not found: {config_path}")
+        raise FileNotFoundError(f"Config file not found: {path}")
     
     with open(path, "r") as f:
         if path.suffix in [".yaml", ".yml"]:
@@ -99,9 +118,40 @@ def load_config_from_file(config_path: str | Path, config_type: type) -> TrainCo
         elif path.suffix == ".json":
             data = json.load(f)
         else:
-            raise ValueError(f"Unsupported config file format: {path.suffix}")
+            raise ValueError(f"Unsupported config format: {path.suffix}. Use .json, .yaml, or .yml")
     
-    return config_type(**data)
+    if config_type is not None:
+        return config_type(**data)
+    return data
+
+
+def ensure_dir(directory: str | Path) -> None:
+    """Create directory if it doesn't exist."""
+    Path(directory).mkdir(parents=True, exist_ok=True)
+
+
+def compute_confidence_interval(data, confidence=0.95):
+    """
+    Compute mean and confidence interval for data.
+    
+    Args:
+        data: Array-like of numeric values
+        confidence: Confidence level (default 0.95 for 95% CI)
+    
+    Returns:
+        Tuple of (mean, ci_low, ci_high)
+    """
+    data = np.array(data)
+    n = len(data)
+    mean = np.mean(data)
+    
+    if n == 1:
+        return mean, mean, mean
+    
+    stderr = stats.sem(data)
+    margin = stderr * stats.t.ppf((1 + confidence) / 2, n - 1)
+    
+    return mean, mean - margin, mean + margin
 
 
 def merge_config_with_args(config: TrainConfig | EvalConfig, args: dict) -> TrainConfig | EvalConfig:

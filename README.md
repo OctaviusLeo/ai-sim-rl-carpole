@@ -1,4 +1,8 @@
 # AI Sim RL (CartPole) - Train/Eval + Video
+[![CI](https://github.com/yourusername/ai-sim-rl-cartpole/workflows/CI/badge.svg)](https://github.com/yourusername/ai-sim-rl-cartpole/actions)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 Besides simulations being cool, implementing AI is used to test.
 
 A minimal, **working** reinforcement learning demo, can extend.
@@ -189,7 +193,7 @@ ai-sim-rl-cartpole/
    ```bash
    python -m venv .venv
    source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-   pip install -e .
+   pip install -e ".[dev]"
    ```
 
 2. **Quick iteration**:
@@ -210,15 +214,61 @@ ai-sim-rl-cartpole/
    rl-reproduce outputs/runs/<run-dir>
    ```
 
-### Summary
+5. **Testing and quality**:
+   ```bash
+   make test                  # Run all tests
+   make test-cov              # Run tests with coverage report
+   make lint                  # Check code quality with flake8
+   make format                # Auto-format code with black
+   ```
 
+### Testing
+
+The project includes comprehensive test coverage:
+
+**Test Categories:**
+- **Determinism tests**: Verify identical seeds produce identical results
+- **Smoke tests**: Ensure basic training runs without errors
+- **Utility tests**: Test helper functions and config management
+- **Evaluation tests**: Validate evaluation metrics and multi-seed aggregation
+
+**Running tests:**
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage report
+pytest tests/ -v --cov=src --cov-report=html
+open htmlcov/index.html  # View coverage report
+
+# Run specific test file
+pytest tests/test_determinism.py -v
+
+# Run tests with specific markers
+pytest tests/ -v -m "not slow"
+```
+
+**Continuous Integration:**
+- GitHub Actions CI runs on every push and PR
+- Tests on Python 3.8, 3.9, 3.10 across Linux, Windows, and macOS
+- Code linting with flake8
+- Code formatting checks with black
+- Coverage reporting to Codecov
+
+### Tips for Interviewers
+
+### Tips for Interviewers
+
+This project demonstrates:
+- **Scientific rigor**: Multi-seed evaluation with confidence intervals
+- **Reproducibility**: Deterministic training with seed control and config tracking
 - **Professional packaging**: Installable package with CLI entrypoints
 - **Developer ergonomics**: Automation scripts for common workflows
 - **Clean architecture**: Modular design with clear separation of concerns
-- **Reproducibility**: Config files and reproduce functionality
 - **Production practices**: Proper project structure and documentation
+- **Software engineering**: Comprehensive test suite with CI/CD pipeline
+- **Code quality**: Automated linting and formatting standards
 
 ## Future plans
 - Add a second environment (`Acrobot-v1`), compare training curves
 - Add hyperparameter sweep with results table
-- Add tests and CI pipeline

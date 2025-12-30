@@ -1,4 +1,4 @@
-# The following are the dependencies for a Python project that involves reinforcement learning using the gymnasium and stable-baselines3 libraries, along with PyTorch, NumPy, and Matplotlib:
+# Core dependencies
 gymnasium[classic-control]>=0.29.1
 stable-baselines3>=2.3.0
 torch>=2.0.0
@@ -9,3 +9,10 @@ imageio[ffmpeg]>=2.36.0
 scipy>=1.10.0
 tensorboard>=2.14.0
 pyyaml>=6.0.0
+
+# Development dependencies
+pytest>=7.0.0
+pytest-cov>=4.0.0
+flake8>=6.0.0
+black>=23.0.0
+isort>=5.12.0

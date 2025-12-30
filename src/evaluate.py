@@ -52,6 +52,101 @@ def rollout(model: PPO, env: gym.Env, episodes: int, seed: int) -> dict:
     }
 
 
+def evaluate_model(
+    model: PPO,
+    env_name: str,
+    n_episodes: int = 10,
+    seed: int = 0,
+    success_threshold: float = 475.0
+):
+    """
+    Evaluate a trained model on an environment.
+    
+    Args:
+        model: Trained PPO model
+        env_name: Name of the environment
+        n_episodes: Number of episodes to run
+        seed: Random seed for evaluation
+        success_threshold: Threshold for counting successes
+    
+    Returns:
+        Tuple of (returns array, success_rate)
+    """
+    env = gym.make(env_name)
+    returns = []
+    successes = 0
+    
+    for ep in range(n_episodes):
+        obs, _ = env.reset(seed=seed + ep)
+        done = False
+        trunc = False
+        ep_ret = 0.0
+        
+        while not (done or trunc):
+            action, _ = model.predict(obs, deterministic=True)
+            obs, reward, done, trunc, _ = env.step(action)
+            ep_ret += float(reward)
+        
+        returns.append(ep_ret)
+        if ep_ret >= success_threshold:
+            successes += 1
+    
+    env.close()
+    return np.array(returns), successes / n_episodes
+
+
+def multi_seed_evaluation(
+    model: PPO,
+    env_name: str,
+    episodes_per_seed: int = 20,
+    num_seeds: int = 3,
+    base_seed: int = 0
+) -> dict:
+    """
+    Evaluate model across multiple seeds and aggregate results.
+    
+    Args:
+        model: Trained PPO model
+        env_name: Name of the environment
+        episodes_per_seed: Number of episodes per seed
+        num_seeds: Number of different seeds to use
+        base_seed: Starting seed value
+    
+    Returns:
+        Dictionary with aggregated evaluation metrics
+    """
+    all_returns = []
+    all_success_rates = []
+    
+    for i in range(num_seeds):
+        seed = base_seed + i * 1000
+        returns, success_rate = evaluate_model(
+            model, env_name, episodes_per_seed, seed
+        )
+        all_returns.extend(returns)
+        all_success_rates.append(success_rate)
+    
+    all_returns = np.array(all_returns)
+    mean_return = np.mean(all_returns)
+    std_return = np.std(all_returns)
+    
+    # Compute confidence interval
+    n = len(all_returns)
+    stderr = stats.sem(all_returns)
+    ci_margin = stderr * stats.t.ppf(0.975, n - 1)
+    
+    return {
+        "num_seeds": num_seeds,
+        "total_episodes": len(all_returns),
+        "mean_return": float(mean_return),
+        "std_return": float(std_return),
+        "ci_95_low": float(mean_return - ci_margin),
+        "ci_95_high": float(mean_return + ci_margin),
+        "mean_success_rate": float(np.mean(all_success_rates)),
+        "std_success_rate": float(np.std(all_success_rates)),
+    }
+
+
 def compute_confidence_interval(data: List[float], confidence: float = 0.95) -> tuple:
     n = len(data)
     if n < 2:
