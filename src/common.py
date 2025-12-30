@@ -9,7 +9,7 @@ import subprocess
 from dataclasses import asdict, dataclass, fields
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 import numpy as np
 import yaml
@@ -69,7 +69,7 @@ def create_run_dir(config: TrainConfig) -> Path:
     return run_dir
 
 
-def save_config(config: TrainConfig | EvalConfig | Dict[str, Any], path: Path | str) -> None:
+def save_config(config: Union[TrainConfig, EvalConfig, Dict[str, Any]], path: Union[Path, str]) -> None:
     """
     Save configuration to a JSON file.
 
@@ -94,8 +94,8 @@ def save_config(config: TrainConfig | EvalConfig | Dict[str, Any], path: Path | 
 
 
 def load_config(
-    path: Path | str, config_type: Optional[type] = None
-) -> TrainConfig | EvalConfig | Dict[str, Any]:
+    path: Union[Path, str], config_type: Optional[type] = None
+) -> Union[TrainConfig, EvalConfig, Dict[str, Any]]:
     """
     Load configuration from a JSON or YAML file.
 
@@ -128,7 +128,7 @@ def load_config(
     return data
 
 
-def ensure_dir(directory: str | Path) -> None:
+def ensure_dir(directory: Union[str, Path]) -> None:
     """Create directory if it doesn't exist."""
     Path(directory).mkdir(parents=True, exist_ok=True)
 
@@ -158,8 +158,8 @@ def compute_confidence_interval(data, confidence=0.95):
 
 
 def merge_config_with_args(
-    config: TrainConfig | EvalConfig, args: dict
-) -> TrainConfig | EvalConfig:
+    config: Union[TrainConfig, EvalConfig], args: dict
+) -> Union[TrainConfig, EvalConfig]:
     """
     Merge command-line arguments into a configuration object.
     CLI arguments override config file values.
