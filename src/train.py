@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import argparse
-import os
 from pathlib import Path
 
 import gymnasium as gym
 import matplotlib
-matplotlib.use('Agg')  # Use non-interactive backend
-import matplotlib.pyplot as plt
-from stable_baselines3 import PPO
-from stable_baselines3.common.callbacks import BaseCallback
+
+matplotlib.use("Agg")  # Use non-interactive backend
+import matplotlib.pyplot as plt  # noqa: E402
+from stable_baselines3 import PPO  # noqa: E402
+from stable_baselines3.common.callbacks import BaseCallback  # noqa: E402
 
 try:
     from .common import (
@@ -73,7 +73,7 @@ def train_ppo(
 ):
     """
     Train a PPO agent on the specified environment.
-    
+
     Args:
         env_name: Name of the Gym environment
         total_timesteps: Total timesteps to train for
@@ -85,20 +85,20 @@ def train_ppo(
         gamma: Discount factor
         gae_lambda: GAE lambda
         verbose: Verbosity level (0=none, 1=info)
-    
+
     Returns:
         Tuple of (trained model, metrics dict)
     """
     set_global_seed(seed)
-    
+
     env = gym.make(env_name)
     env.reset(seed=seed)
-    
+
     # Create output directory
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
     (output_path / "tensorboard").mkdir(exist_ok=True)
-    
+
     model = PPO(
         policy="MlpPolicy",
         env=env,
@@ -111,14 +111,14 @@ def train_ppo(
         learning_rate=learning_rate,
         tensorboard_log=str(output_path / "tensorboard"),
     )
-    
+
     cb = RewardLogger()
     model.learn(total_timesteps=total_timesteps, callback=cb)
-    
+
     # Save model
     model_path = output_path / "model"
     model.save(str(model_path))
-    
+
     # Compute metrics
     metrics = {}
     if len(cb.episode_rewards) > 0:
@@ -131,15 +131,17 @@ def train_ppo(
         plot_path = output_path / "training_returns.png"
         plt.savefig(plot_path, dpi=160, bbox_inches="tight")
         plt.close()
-        
+
         metrics = {
             "total_episodes": len(cb.episode_rewards),
-            "final_mean_return": float(sum(cb.episode_rewards[-100:]) / min(100, len(cb.episode_rewards))),
+            "final_mean_return": float(
+                sum(cb.episode_rewards[-100:]) / min(100, len(cb.episode_rewards))
+            ),
             "max_return": float(max(cb.episode_rewards)),
             "min_return": float(min(cb.episode_rewards)),
         }
         save_metrics(metrics, output_path, "training_metrics.json")
-    
+
     return model, metrics
 
 
@@ -155,7 +157,7 @@ def main() -> None:
     args = parser.parse_args()
 
     ensure_dirs()
-    
+
     if args.config:
         config = load_config(args.config, TrainConfig)
         override_dict = {
@@ -181,11 +183,11 @@ def main() -> None:
             batch_size=args.batch_size,
             learning_rate=args.learning_rate,
         )
-    
+
     run_dir = create_run_dir(config)
     save_config(config, run_dir)
     print(f"Run directory: {run_dir}")
-    
+
     # Train the model
     model, metrics = train_ppo(
         env_name=config.env,
@@ -199,7 +201,7 @@ def main() -> None:
         gae_lambda=config.gae_lambda,
         verbose=1,
     )
-    
+
     print(f"Training metrics: {metrics}")
     print(f"Saved model: {run_dir / 'model.zip'}")
     print(f"All artifacts saved to: {run_dir}")

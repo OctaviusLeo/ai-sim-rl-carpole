@@ -35,7 +35,9 @@ class BaselinePolicy:
             raise ValueError(f"Unknown baseline policy: {self.policy_type}")
 
 
-def evaluate_policy(policy, env: gym.Env, episodes: int, seed: int, deterministic: bool = True) -> dict:
+def evaluate_policy(
+    policy, env: gym.Env, episodes: int, seed: int, deterministic: bool = True
+) -> dict:
     returns = []
     steps = []
     success = 0
@@ -83,7 +85,9 @@ def compute_confidence_interval(data: List[float], confidence: float = 0.95) -> 
     return (float(mean - interval), float(mean + interval))
 
 
-def run_multi_seed_evaluation(policy, env: gym.Env, episodes: int, base_seed: int, num_seeds: int) -> dict:
+def run_multi_seed_evaluation(
+    policy, env: gym.Env, episodes: int, base_seed: int, num_seeds: int
+) -> dict:
     all_results = []
     for i in range(num_seeds):
         seed = base_seed + i * 1000
@@ -112,27 +116,31 @@ def run_multi_seed_evaluation(policy, env: gym.Env, episodes: int, base_seed: in
 def export_to_csv(results: Dict[str, dict], output_path: Path) -> None:
     with open(output_path, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow([
-            "Policy",
-            "Mean Return",
-            "Std Return",
-            "CI 95% Low",
-            "CI 95% High",
-            "Success Rate",
-            "Min Return",
-            "Max Return",
-        ])
+        writer.writerow(
+            [
+                "Policy",
+                "Mean Return",
+                "Std Return",
+                "CI 95% Low",
+                "CI 95% High",
+                "Success Rate",
+                "Min Return",
+                "Max Return",
+            ]
+        )
         for policy_name, metrics in results.items():
-            writer.writerow([
-                policy_name,
-                f"{metrics['mean_return']:.2f}",
-                f"{metrics['std_return']:.2f}",
-                f"{metrics['ci_95_low']:.2f}",
-                f"{metrics['ci_95_high']:.2f}",
-                f"{metrics['mean_success_rate']:.2%}",
-                f"{metrics['min_return']:.2f}",
-                f"{metrics['max_return']:.2f}",
-            ])
+            writer.writerow(
+                [
+                    policy_name,
+                    f"{metrics['mean_return']:.2f}",
+                    f"{metrics['std_return']:.2f}",
+                    f"{metrics['ci_95_low']:.2f}",
+                    f"{metrics['ci_95_high']:.2f}",
+                    f"{metrics['mean_success_rate']:.2%}",
+                    f"{metrics['min_return']:.2f}",
+                    f"{metrics['max_return']:.2f}",
+                ]
+            )
 
 
 def export_to_markdown(results: Dict[str, dict], output_path: Path) -> None:
@@ -157,11 +165,17 @@ def export_to_markdown(results: Dict[str, dict], output_path: Path) -> None:
         f.write("\n## Detailed Metrics\n\n")
         for policy_name, metrics in results.items():
             f.write(f"### {policy_name}\n\n")
-            f.write(f"- **Mean Return**: {metrics['mean_return']:.2f} ± {metrics['std_return']:.2f}\n")
-            f.write(f"- **95% Confidence Interval**: [{metrics['ci_95_low']:.2f}, {metrics['ci_95_high']:.2f}]\n")
+            f.write(
+                f"- **Mean Return**: {metrics['mean_return']:.2f} ± {metrics['std_return']:.2f}\n"
+            )
+            f.write(
+                f"- **95% Confidence Interval**: [{metrics['ci_95_low']:.2f}, {metrics['ci_95_high']:.2f}]\n"
+            )
             f.write(f"- **Success Rate**: {metrics['mean_success_rate']:.2%}\n")
             f.write(f"- **Range**: [{metrics['min_return']:.0f}, {metrics['max_return']:.0f}]\n")
-            f.write(f"- **Total Episodes**: {metrics['total_episodes']} ({metrics['num_seeds']} seeds)\n\n")
+            f.write(
+                f"- **Total Episodes**: {metrics['total_episodes']} ({metrics['num_seeds']} seeds)\n\n"
+            )
 
 
 def main() -> None:
@@ -172,8 +186,12 @@ def main() -> None:
     parser.add_argument("--num-seeds", type=int, default=5, help="Number of seeds")
     parser.add_argument("--seed", type=int, default=123, help="Base random seed")
     parser.add_argument("--output-dir", default="outputs/comparisons", help="Directory for results")
-    parser.add_argument("--baselines", nargs="+", default=["random", "do_nothing"], 
-                        help="Baseline policies to compare against")
+    parser.add_argument(
+        "--baselines",
+        nargs="+",
+        default=["random", "do_nothing"],
+        help="Baseline policies to compare against",
+    )
     args = parser.parse_args()
 
     ensure_dirs()
@@ -195,16 +213,20 @@ def main() -> None:
         results[f"Baseline: {baseline}"] = run_multi_seed_evaluation(
             baseline_policy, env, args.episodes, args.seed, args.num_seeds
         )
-        print(f"  Mean return: {results[f'Baseline: {baseline}']['mean_return']:.2f} "
-              f"± {results[f'Baseline: {baseline}']['std_return']:.2f}")
+        print(
+            f"  Mean return: {results[f'Baseline: {baseline}']['mean_return']:.2f} "
+            f"± {results[f'Baseline: {baseline}']['std_return']:.2f}"
+        )
 
     print(f"\nEvaluating trained model: {Path(args.model_path).parent.name}...")
     model = PPO.load(args.model_path, env=env)
     results["Trained PPO"] = run_multi_seed_evaluation(
         model, env, args.episodes, args.seed, args.num_seeds
     )
-    print(f"  Mean return: {results['Trained PPO']['mean_return']:.2f} "
-          f"± {results['Trained PPO']['std_return']:.2f}")
+    print(
+        f"  Mean return: {results['Trained PPO']['mean_return']:.2f} "
+        f"± {results['Trained PPO']['std_return']:.2f}"
+    )
 
     csv_path = output_dir / "results.csv"
     export_to_csv(results, csv_path)
@@ -214,9 +236,9 @@ def main() -> None:
     export_to_markdown(results, md_path)
     print(f"Exported Markdown to: {md_path}")
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("COMPARISON SUMMARY")
-    print("="*60)
+    print("=" * 60)
     for policy_name, metrics in results.items():
         print(f"\n{policy_name}:")
         print(f"  Mean Return: {metrics['mean_return']:.2f} ± {metrics['std_return']:.2f}")

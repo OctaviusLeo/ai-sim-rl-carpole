@@ -12,9 +12,9 @@ from moviepy.editor import VideoFileClip
 from stable_baselines3 import PPO
 
 try:
-    from .common import ensure_dirs, set_global_seed, Paths
+    from .common import Paths, ensure_dirs, set_global_seed
 except ImportError:
-    from common import ensure_dirs, set_global_seed, Paths
+    from common import Paths, ensure_dirs, set_global_seed
 
 
 def main() -> None:
@@ -70,7 +70,9 @@ def main() -> None:
             recorded_path = max(mp4s, key=os.path.getmtime) if mp4s else None
 
     if recorded_path is None:
-        raise RuntimeError("No video was recorded; ensure steps > 0 and the env terminated at least once.")
+        raise RuntimeError(
+            "No video was recorded; ensure steps > 0 and the env terminated at least once."
+        )
 
     print(f"Video saved to: {recorded_path}")
 

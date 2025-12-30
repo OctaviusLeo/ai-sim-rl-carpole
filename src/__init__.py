@@ -3,7 +3,7 @@
 __version__ = "0.1.0"
 __author__ = "AI Sim RL Team"
 
-from src import common, train, evaluate, compare, reproduce, record_video
+from src import common, compare, evaluate, record_video, reproduce, train
 
 __all__ = [
     "common",

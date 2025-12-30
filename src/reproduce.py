@@ -50,8 +50,14 @@ class RewardLogger(BaseCallback):
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Reproduce a training run from saved config")
-    parser.add_argument("run_dir", type=str, help="Path to the run directory containing config.json")
-    parser.add_argument("--output-dir", type=str, help="Output directory for reproduced run (default: same as original)")
+    parser.add_argument(
+        "run_dir", type=str, help="Path to the run directory containing config.json"
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        help="Output directory for reproduced run (default: same as original)",
+    )
     args = parser.parse_args()
 
     run_path = Path(args.run_dir)
@@ -116,7 +122,9 @@ def main() -> None:
 
         metrics = {
             "total_episodes": len(cb.episode_rewards),
-            "final_mean_return": float(sum(cb.episode_rewards[-100:]) / min(100, len(cb.episode_rewards))),
+            "final_mean_return": float(
+                sum(cb.episode_rewards[-100:]) / min(100, len(cb.episode_rewards))
+            ),
             "max_return": float(max(cb.episode_rewards)),
             "min_return": float(min(cb.episode_rewards)),
         }
