@@ -9,6 +9,9 @@ on:
 jobs:
   test:
     runs-on: ${{ matrix.os }}
+    env:
+      # Force CPU-only PyTorch wheels to avoid large CUDA downloads on CI runners
+      PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
