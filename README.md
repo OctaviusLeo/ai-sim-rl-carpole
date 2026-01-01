@@ -15,6 +15,8 @@ A small, hiring-ready reinforcement learning project: train PPO on CartPole, eva
 - [Repo structure](#repo-structure)
 - [Future plans](#future-plans)
 
+---
+
 ## Demo
 ![CartPole PPO demo](assets/cartpole_demo-episode-0.gif)
 
