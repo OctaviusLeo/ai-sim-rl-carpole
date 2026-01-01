@@ -5,6 +5,16 @@
 
 A small, hiring-ready reinforcement learning project: train PPO on CartPole, evaluate with baselines + confidence intervals, and keep runs reproducible (CI included).
 
+## Table of Contents
+- [Demo](#demo)
+- [Results (example)](#results-example)
+- [Skills / signals](#skills--signals)
+- [Tech stack](#tech-stack)
+- [Quickstart](#quickstart)
+- [Reproducibility](#reproducibility)
+- [Repo structure](#repo-structure)
+- [Future plans](#future-plans)
+
 ## Demo
 ![CartPole PPO demo](assets/cartpole_demo-episode-0.gif)
 
@@ -49,8 +59,16 @@ python -m src.train --config configs/default.yaml
 # 2) Compare vs baselines (writes outputs/comparisons/results.*)
 python -m src.compare --model-path outputs/runs/<run-dir>/model.zip --episodes 20 --num-seeds 3 --seed 123
 
-# 3) Record a short demo GIF (writes videos/ and/or assets/ depending on your config)
+# 3) View training curves in TensorBoard
+tensorboard --logdir outputs/runs/<run-dir>/tensorboard
+
+# 4) Record a short demo GIF (writes videos/ and/or assets/ depending on your config)
 python -m src.record_video --model-path outputs/runs/<run-dir>/model.zip --gif
+```
+
+**Optional:** Multi-seed evaluation with saved results
+```bash
+python -m src.evaluate --model-path outputs/runs/<run-dir>/model.zip --episodes 20 --num-seeds 5 --save-results
 ```
 
 ## Reproducibility
